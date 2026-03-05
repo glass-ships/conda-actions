@@ -18,7 +18,7 @@ jobs:
 
       - name: Test
         id: test
-        uses: ./
+        uses: ../conda-cleanup
         with:
           anaconda_token: unset_token
           organization: neutronimaging
@@ -50,7 +50,7 @@ jobs:
 
       - name: Test
         id: test
-        uses: ./
+        uses: ../conda-cleanup
         with:
           anaconda_token: unset_token
           organization: neutronimaging
