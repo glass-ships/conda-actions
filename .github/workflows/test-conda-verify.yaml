@@ -19,7 +19,7 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Verify conda package
         uses: neutrons/conda-actions/conda-verify@main
@@ -40,7 +40,7 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Verify conda package
         uses: neutrons/conda-actions/conda-verify@main

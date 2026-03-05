@@ -30,15 +30,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Install pixi if not already available, then ensure anaconda-client is installed.
-    - name: Install anaconda-client via pixi
+    - name: Check for anaconda and pixi commands
       shell: bash
       run: |
-        if ! command -v pixi &>/dev/null; then
-          curl -fsSL https://pixi.sh/install.sh | bash
-          echo "${HOME}/.pixi/bin" >> "${GITHUB_PATH}"
+        if ! command -v anaconda &> /dev/null; then
+          if ! command -v pixi &> /dev/null; then
+            echo "Error: Neither 'anaconda' nor 'pixi' command found. Please install the Anaconda Client or Pixi CLI to use this action."
+            exit 1
+          else
+            echo "'pixi' command found. Installing anaconda-client via pixi..."
+            pixi install anaconda-client
+          fi
         fi
-        pixi global install anaconda-client
 
     - name: Upload package to Anaconda Cloud
       shell: bash
