@@ -45,7 +45,7 @@ runs:
             exit 1
           else
             echo "'pixi' command found. Installing anaconda-client via pixi..."
-            pixi install anaconda-client
+            pixi global install anaconda-client
           fi
         fi
 

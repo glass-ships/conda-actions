@@ -123,6 +123,13 @@ This action assumes that:
 - The package has already been built and is available in a local conda channel directory
 - Either `anaconda-client` or `pixi` is installed in the environment where the action is running
 
+If `label` is not provided, the action will attempt to determine the label from the `github-ref`:
+
+- If the ref is tagged `refs/tags/v*`, the package will be published to the `main` label
+- If the ref is tagged `refs/tags/v*rc*`, the package will be published to the `rc` label
+- If the ref is tagged `refs/heads/next`, the package will be published to the `dev` label
+- If the label cannot be determined from the ref, the action will fail
+
 #### Usage
 
 Full list of available inputs in [`publish/action.yaml`](#publish/action.yaml).
