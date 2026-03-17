@@ -37,15 +37,21 @@ runs:
   using: "composite"
   steps:
     - name: Check for anaconda and pixi commands
+      id: get_command
       shell: bash
       run: |
-        if ! command -v anaconda &> /dev/null; then
-          if ! command -v pixi &> /dev/null; then
-            echo "Error: Neither 'anaconda' nor 'pixi' command found. Please install the Anaconda Client or Pixi CLI to use this action."
-            exit 1
-          else
+        # if `anaconda` command is available, use it directly; otherwise, check for `pixi` and install `anaconda-client` if needed
+        if command -v anaconda &> /dev/null; then
+          echo "'anaconda' command found. Using it for upload."
+          echo "CMD=anaconda" >> $GITHUB_OUTPUT
+        else
+          if command -v pixi &> /dev/null; then
             echo "'pixi' command found. Installing anaconda-client via pixi..."
             pixi global install anaconda-client
+            echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
+          else
+            echo "Error: Neither 'anaconda' nor 'pixi' command found. Please install the Anaconda Client or Pixi CLI to use this action."
+            exit 1
           fi
         fi
 
@@ -60,6 +66,8 @@ runs:
         FORCE: ${{ inputs.force }}
       run: |
         set -euo pipefail
+
+        set CMD=${{ steps.get_command.outputs.CMD }}
 
         if [ "${LABEL}" = "" ]; then
           echo "No label input provided. Determining label from GitHub ref '${REF}'..."
@@ -81,7 +89,7 @@ runs:
         fi
 
         echo "Uploading ${PACKAGE_PATH} to ${ORGANIZATION} with label '${LABEL}'"
-        anaconda \
+        ${CMD} \
           --token "${ANACONDA_API_TOKEN}" \
           upload \
           --user "${ORGANIZATION}" \
