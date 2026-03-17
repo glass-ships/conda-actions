@@ -40,19 +40,21 @@ runs:
       id: get_command
       shell: bash
       run: |
-        # if `anaconda` command is available, use it directly; otherwise, check for `pixi` and install `anaconda-client` if needed
-        if command -v anaconda &> /dev/null; then
-          echo "'anaconda' command found. Using it for upload."
-          echo "CMD=anaconda" >> $GITHUB_OUTPUT
+        if command -v anaconda &>/dev/null; then
+            echo "'anaconda' command is available. Using it for upload."
+            export CMD="anaconda"
+        elif pixi run anaconda --version &>/dev/null; then
+            echo "anaconda command is available via pixi. Using 'pixi run anaconda' for upload."
+            export CMD="pixi run anaconda"
         else
-          if command -v pixi &> /dev/null; then
-            echo "'pixi' command found. Installing anaconda-client via pixi..."
-            pixi global install anaconda-client
-            echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
-          else
-            echo "Error: Neither 'anaconda' nor 'pixi' command found. Please install the Anaconda Client or Pixi CLI to use this action."
-            exit 1
-          fi
+            echo "anaconda command is not available via pixi. Checking for 'anaconda' command..."
+            if command -v anaconda &>/dev/null; then
+                echo "'anaconda' command found. Using it for upload."
+                export CMD="anaconda"
+            else
+                echo "Neither 'anaconda' command nor 'pixi run anaconda' is available. Please ensure that anaconda-client is installed and available in PATH or via pixi."
+                exit 1
+            fi
         fi
 
     - name: Upload package to Anaconda Cloud
