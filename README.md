@@ -144,6 +144,7 @@ Inputs:
 | `github-ref`     | GitHub ref (e.g., `refs/tags/v1.0.0`) to determine the label | No       | github.ref |
 | `label`          | Label to apply to the package (e.g., `dev`, `nightly`, `rc`) | No       | -          |
 | `force`          | If `true`, overwrite existing package with the same version  | No       | `false`    |
+| `dry-run`        | If `true`, print the upload command and skip publishing      | No       | `false`    |
 
 Example:
 
