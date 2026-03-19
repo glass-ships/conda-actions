@@ -17,6 +17,8 @@ jobs:
 
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.9.4
+        with:
+          global-environments: python
 
       - name: Publish package (dry run)
         uses: ./publish
