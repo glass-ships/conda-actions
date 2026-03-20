@@ -32,6 +32,11 @@ inputs:
       If true, overwrite an existing package file with the same name/version.
     required: false
     default: "false"
+  dry-run:
+    description: |
+      If true, print the upload command and skip publishing to Anaconda Cloud.
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -41,21 +46,21 @@ runs:
       shell: bash
       run: |
         if command -v anaconda &>/dev/null; then
-            echo "'anaconda' command is available. Using it for upload."
-            echo "CMD=anaconda" >> $GITHUB_OUTPUT
+          echo "'anaconda' command is available. Using it for upload."
+          echo "CMD=anaconda" >> $GITHUB_OUTPUT
         elif pixi run anaconda --version &>/dev/null; then
-            echo "anaconda command is available via pixi. Using 'pixi run anaconda' for upload."
-            echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
+          echo "anaconda command is available via pixi. Using 'pixi run anaconda' for upload."
+          echo "CMD=pixi run anaconda" >> $GITHUB_OUTPUT
         else
             echo "Checking for 'pixi' command..."
             if command -v pixi &>/dev/null; then
-                echo "'pixi' command is available but 'anaconda' is not found. Installing anaconda-client..."
-                pixi global install anaconda-client
-                echo "Using 'pixi run anaconda' for upload after installation."
-                echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
+              echo "'pixi' command is available but 'anaconda' is not found. Installing anaconda-client..."
+              pixi global install anaconda-client
+              echo "Using 'pixi run anaconda' for upload after installation."
+            echo "CMD=pixi run anaconda" >> $GITHUB_OUTPUT
             else
-                echo "Neither 'anaconda' command nor 'pixi' is available. Please ensure that anaconda-client is installed and available in PATH or via pixi."
-                exit 1
+              echo "Neither 'anaconda' command nor 'pixi' is available. Please ensure that anaconda-client is installed and available in PATH or via pixi."
+              exit 1
             fi
         fi
 
@@ -68,10 +73,15 @@ runs:
         REF: ${{ inputs.github-ref }}
         LABEL: ${{ inputs.label }}
         FORCE: ${{ inputs.force }}
+        DRY_RUN: ${{ inputs.dry-run }}
       run: |
         set -euo pipefail
 
-        set CMD=${{ steps.get_command.outputs.CMD }}
+        CMD="${{ steps.get_command.outputs.CMD }}"
+        if [ -z "${CMD}" ]; then
+          echo "No upload command detected from previous step."
+          exit 1
+        fi
 
         if [ "${LABEL}" = "" ]; then
           echo "No label input provided. Determining label from GitHub ref '${REF}'..."
@@ -92,13 +102,15 @@ runs:
           force_flag="--force"
         fi
 
+        upload_cmd="${CMD} --token \"${ANACONDA_API_TOKEN}\" upload --user \"${ORGANIZATION}\" --label \"${LABEL}\" ${force_flag} \"${PACKAGE_PATH}\""
+
+        if [ "${DRY_RUN}" = "true" ]; then
+          echo "Dry run enabled. Skipping package upload."
+          echo "Would run: ${upload_cmd}"
+          exit 0
+        fi
+
         echo "Uploading ${PACKAGE_PATH} to ${ORGANIZATION} with label '${LABEL}'"
-        ${CMD} \
-          --token "${ANACONDA_API_TOKEN}" \
-          upload \
-          --user "${ORGANIZATION}" \
-          --label "${LABEL}" \
-          ${force_flag} \
-          ${{ inputs.package-path }}
+        eval "${upload_cmd}"
 
         echo "Upload complete."
