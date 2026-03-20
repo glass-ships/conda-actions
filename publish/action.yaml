@@ -69,14 +69,13 @@ runs:
       env:
         ANACONDA_API_TOKEN: ${{ inputs.anaconda-token }}
         ORGANIZATION: ${{ inputs.organization }}
-        PACKAGE_PATH: ${{ inputs.package-path }}
         REF: ${{ inputs.github-ref }}
         LABEL: ${{ inputs.label }}
         FORCE: ${{ inputs.force }}
         DRY_RUN: ${{ inputs.dry-run }}
       run: |
         set -euo pipefail
-
+        
         CMD="${{ steps.get_command.outputs.CMD }}"
         if [ -z "${CMD}" ]; then
           echo "No upload command detected from previous step."
@@ -102,7 +101,7 @@ runs:
           force_flag="--force"
         fi
 
-        upload_cmd="${CMD} --token \"${ANACONDA_API_TOKEN}\" upload --user \"${ORGANIZATION}\" --label \"${LABEL}\" ${force_flag} \"${PACKAGE_PATH}\""
+        upload_cmd="${CMD} --token \"${ANACONDA_API_TOKEN}\" upload --user \"${ORGANIZATION}\" --label \"${LABEL}\" ${force_flag} ${{ inputs.package-path }}"
 
         if [ "${DRY_RUN}" = "true" ]; then
           echo "Dry run enabled. Skipping package upload."
@@ -110,7 +109,7 @@ runs:
           exit 0
         fi
 
-        echo "Uploading ${PACKAGE_PATH} to ${ORGANIZATION} with label '${LABEL}'"
+        echo "Uploading ${{ inputs.package-path }} to ${ORGANIZATION} with label '${LABEL}'"
         eval "${upload_cmd}"
 
         echo "Upload complete."
