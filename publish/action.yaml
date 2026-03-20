@@ -50,14 +50,14 @@ runs:
             echo "CMD=anaconda" >> $GITHUB_OUTPUT
         elif pixi run anaconda --version &>/dev/null; then
             echo "anaconda command is available via pixi. Using 'pixi run anaconda' for upload."
-            echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
+          echo "CMD=pixi run anaconda" >> $GITHUB_OUTPUT
         else
             echo "Checking for 'pixi' command..."
             if command -v pixi &>/dev/null; then
                 echo "'pixi' command is available but 'anaconda' is not found. Installing anaconda-client..."
                 pixi global install anaconda-client
                 echo "Using 'pixi run anaconda' for upload after installation."
-                echo "CMD='pixi run anaconda'" >> $GITHUB_OUTPUT
+            echo "CMD=pixi run anaconda" >> $GITHUB_OUTPUT
             else
                 echo "Neither 'anaconda' command nor 'pixi' is available. Please ensure that anaconda-client is installed and available in PATH or via pixi."
                 exit 1
@@ -77,7 +77,11 @@ runs:
       run: |
         set -euo pipefail
 
-        CMD=${{ steps.get_command.outputs.CMD }}
+        CMD="${{ steps.get_command.outputs.CMD }}"
+        if [ -z "${CMD}" ]; then
+          echo "No upload command detected from previous step."
+          exit 1
+        fi
 
         if [ "${LABEL}" = "" ]; then
           echo "No label input provided. Determining label from GitHub ref '${REF}'..."
